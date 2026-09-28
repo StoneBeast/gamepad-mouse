@@ -1,10 +1,30 @@
 # GamepadMouse（手柄映射鼠标）
 
+[![Release](https://img.shields.io/github/v/release/StoneBeast/gamepad-mouse?include_prereleases&label=%E6%9C%80%E6%96%B0%E7%89%88%E6%9C%AC)](https://github.com/StoneBeast/gamepad-mouse/releases)
+[![Build](https://github.com/StoneBeast/gamepad-mouse/actions/workflows/build.yml/badge.svg)](https://github.com/StoneBeast/gamepad-mouse/actions/workflows/build.yml)
+
 <p align="center">
   <img src="assets/app-icon.svg" width="128" alt="GamepadMouse 图标">
 </p>
 
 一个 Windows 后台托盘程序：把手柄（XInput 手柄）映射为鼠标使用，**映射的开关完全由手柄上的组合键/按键完成**，所有按键映射和参数均可自定义，无需依赖键盘鼠标即可全程操作。
+
+## 下载安装
+
+到 [Releases](https://github.com/StoneBeast/gamepad-mouse/releases) 页面获取（**无需安装 .NET 运行时**）：
+
+| 文件 | 说明 |
+|---|---|
+| `GamepadMouse-x.y.z-portable.zip` | **便携版**：解压即用的单个 exe |
+| `GamepadMouse-setup-x.y.z.exe` | **安装包**：中文向导、免管理员权限（按用户安装），含开始菜单/桌面快捷方式，支持卸载 |
+
+**发布新版本**：推送 `v` 开头的 tag，GitHub Actions 自动构建并发布：
+
+```bash
+git tag v1.2.1 && git push origin v1.2.1
+```
+
+也可在 Actions 页面手动触发 Release 工作流（填版本号）。
 
 ## 功能特性
 

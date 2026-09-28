@@ -295,7 +295,7 @@ internal class SettingsForm : Form
         // 自绘下拉格：主题背景 + 自定义箭头，替换系统 ComboBox 按钮
         _grid.CellPainting += (_, e) =>
         {
-            if (e.RowIndex < 0 || (e.ColumnIndex != 1 && e.ColumnIndex != 3)) return;
+            if (e.RowIndex < 0 || e.Graphics is null || (e.ColumnIndex != 1 && e.ColumnIndex != 3)) return;
             e.PaintBackground(e.CellBounds, false);
             using (var bg = new SolidBrush(e.State.HasFlag(DataGridViewElementStates.Selected)
                 ? UiTheme.RowSelect : UiTheme.CardBg))

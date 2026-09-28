@@ -1,0 +1,31 @@
+name: Build
+
+on:
+  push:
+    branches: [ main ]
+    paths: [ "src/**", "assets/**", ".github/workflows/build.yml" ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 安装 .NET 8 SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: 构建
+        run: dotnet build src/GamepadMouse -c Release
+
+      - name: 上传构建产物
+        uses: actions/upload-artifact@v4
+        with:
+          name: GamepadMouse-debugbuild
+          path: src/GamepadMouse/bin/Release/net8.0-windows/GamepadMouse.exe
+          retention-days: 7

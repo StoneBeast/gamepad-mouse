@@ -1,0 +1,88 @@
+name: Release
+
+# 推送 v* 标签（如 v1.2.1）自动发布 Release；
+# 也可在 Actions 页面手动触发（填版本号，不带 v 前缀）。
+on:
+  push:
+    tags: [ "v*" ]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: '版本号（如 1.2.1，不带 v 前缀；留空则用 dev-短SHA）'
+        required: false
+        default: ''
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 安装 .NET 8 SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: 计算版本号
+        id: ver
+        shell: bash
+        run: |
+          INPUT_V="${{ inputs.version }}"
+          if [ -n "$INPUT_V" ]; then
+            V="$INPUT_V"
+          elif [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            V="${GITHUB_REF#refs/tags/v}"
+          else
+            V="0.0.0-dev.${GITHUB_SHA::7}"
+          fi
+          echo "version=$V" >> "$GITHUB_OUTPUT"
+          echo "tag=v$V" >> "$GITHUB_OUTPUT"
+          echo "发布版本: $V"
+
+      - name: 发布自包含单文件
+        run: >
+          dotnet publish src/GamepadMouse -c Release -r win-x64
+          --self-contained true -p:PublishSingleFile=true
+          -p:IncludeNativeLibrariesForSelfExtract=true
+          -p:EnableCompressionInSingleFile=true
+          -p:Version=${{ steps.ver.outputs.version }}
+          -o dist/publish
+
+      - name: 打包便携版
+        shell: pwsh
+        run: |
+          Compress-Archive -Path dist/publish/GamepadMouse.exe `
+            -DestinationPath dist/GamepadMouse-${{ steps.ver.outputs.version }}-portable.zip
+
+      - name: 下载 Inno Setup 中文语言包
+        shell: pwsh
+        run: |
+          $url = "https://raw.githubusercontent.com/jrsoftware/issrc/main/Files/Languages/Unofficial/ChineseSimplified.isl"
+          Invoke-WebRequest -Uri $url -OutFile installer/ChineseSimplified.isl
+
+      - name: 编译安装包（Inno Setup）
+        shell: pwsh
+        run: |
+          $iscc = "C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
+          if (-not (Test-Path $iscc)) { $iscc = "iscc" }
+          & $iscc "/DAppVersion=${{ steps.ver.outputs.version }}" installer/GamepadMouse.iss
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: 列出产物
+        shell: bash
+        run: ls -la dist/
+
+      - name: 创建 Release 并上传
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          gh release create "${{ steps.ver.outputs.tag }}" \
+            --title "GamepadMouse v${{ steps.ver.outputs.version }}" \
+            --generate-notes \
+            dist/GamepadMouse-*.zip \
+            dist/GamepadMouse-setup-*.exe
