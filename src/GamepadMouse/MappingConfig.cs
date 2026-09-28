@@ -75,6 +75,9 @@ public class MappingConfig
     /// <summary>扳机视为按下的阈值（0~255）。</summary>
     public int TriggerThreshold { get; set; } = 64;
 
+    /// <summary>界面主题：Dark / Light。</summary>
+    public string Theme { get; set; } = "Dark";
+
     /// <summary>启动时自动开启映射。</summary>
     public bool StartEnabled { get; set; } = true;
 
@@ -169,6 +172,7 @@ public class MappingConfig
         Curve = Math.Clamp(Curve, 1, 3);
         PollRateMs = Math.Clamp(PollRateMs, 4, 50);
         TriggerThreshold = Math.Clamp(TriggerThreshold, 1, 255);
+        if (Theme != "Dark" && Theme != "Light") Theme = "Dark";
 
         var clean = new Dictionary<string, string>();
         foreach (var b in AllButtons)

@@ -20,6 +20,9 @@ internal static class Program
         try
         {
             var config = MappingConfig.Load();
+            GamepadMouse.Ui.UiTheme.Apply(config.Theme == "Light"
+                ? GamepadMouse.Ui.Palette.Light
+                : GamepadMouse.Ui.Palette.Dark);
             var mapper = new Mapper(config);
             bool openSettings = args.Any(a => a is "--settings" or "-s");
             Application.Run(new TrayContext(mapper, openSettings));
