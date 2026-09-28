@@ -506,19 +506,43 @@ internal class SettingsForm : Form
 
     private void BuildBehaviorCard()
     {
-        var card = new Card("行为", new Point(12, 716), new Size(636, 80));
+        var card = new Card("行为（切换后立即生效）", new Point(12, 716), new Size(636, 80));
 
         var lblAuto = Lbl("开机自启", new Point(24, 46), new Size(68, 24));
         _swAutostart = new ToggleSwitch(Autostart.IsEnabled(), new Point(96, 44));
+        _swAutostart.CheckedChanged += (_, _) =>
+        {
+            try { Autostart.SetEnabled(_swAutostart.Checked); }
+            catch (Exception ex)
+            {
+                MessageBox.Show(this, "设置开机自启失败：" + ex.Message, "错误",
+                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                _swAutostart.SetChecked(!_swAutostart.Checked); // 回滚到实际状态
+            }
+        };
 
         var lblStart = Lbl("启动时开启映射", new Point(210, 46), new Size(112, 24));
         _swStartEnabled = new ToggleSwitch(_working.StartEnabled, new Point(326, 44));
+        _swStartEnabled.CheckedChanged += (_, _) =>
+            ApplyBehaviorChange(c => c.StartEnabled = _swStartEnabled.Checked);
 
         var lblVib = Lbl("开关时震动反馈", new Point(430, 46), new Size(112, 24));
         _swVibrate = new ToggleSwitch(_working.VibrateOnToggle, new Point(546, 44));
+        _swVibrate.CheckedChanged += (_, _) =>
+            ApplyBehaviorChange(c => c.VibrateOnToggle = _swVibrate.Checked);
 
         card.Controls.AddRange([lblAuto, _swAutostart, lblStart, _swStartEnabled, lblVib, _swVibrate]);
         Controls.Add(card);
+    }
+
+    /// <summary>行为开关即时生效：基于当前生效配置做单字段修改并热更新+落盘。</summary>
+    private void ApplyBehaviorChange(Action<MappingConfig> mutate)
+    {
+        var c = CloneConfig(_mapper.Config);
+        mutate(c);
+        c.Normalize();
+        _mapper.ApplyConfig(c);
+        mutate(_working); // 同步编辑副本，避免之后"保存并应用"用旧值覆盖
     }
 
     // ---------------- 底部按钮 ----------------
@@ -678,6 +702,7 @@ internal class SettingsForm : Form
         _segWheelMode.SetSelected(def.SmoothWheel ? 0 : 1);
         _swStartEnabled.SetChecked(true);
         _swVibrate.SetChecked(true);
+        ApplyBehaviorChange(c => { c.StartEnabled = true; c.VibrateOnToggle = true; });
 
         for (int i = 0; i < 8; i++)
         {

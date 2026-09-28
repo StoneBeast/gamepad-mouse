@@ -111,8 +111,49 @@ public class MappingConfig
     };
 
     [JsonIgnore]
-    public static string ConfigDir =>
-        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "GamepadMouse");
+    public static string ConfigDir => _configDir ??= ResolveConfigDir();
+
+    private static string? _configDir;
+
+    /// <summary>
+    /// 便携式配置：优先放在程序所在目录（配置随安装目录/便携包走）；
+    /// 目录不可写（如装进受保护位置）时回退 %APPDATA%\GamepadMouse。
+    /// 首次升级时自动把 %APPDATA% 里的旧配置迁移过来。
+    /// </summary>
+    private static string ResolveConfigDir()
+    {
+        string appData = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "GamepadMouse");
+        try
+        {
+            string exeDir = AppContext.BaseDirectory;
+
+            // 可写性探测
+            string probe = Path.Combine(exeDir, ".write_probe");
+            File.WriteAllText(probe, "1");
+            File.Delete(probe);
+
+            // 迁移旧配置（老版本存放在 %APPDATA%）
+            string exeConfig = Path.Combine(exeDir, "config.json");
+            string appConfig = Path.Combine(appData, "config.json");
+            if (!File.Exists(exeConfig) && File.Exists(appConfig))
+            {
+                File.Copy(appConfig, exeConfig);
+                string oldLog = Path.Combine(appData, "log.txt");
+                if (File.Exists(oldLog))
+                    File.Copy(oldLog, Path.Combine(exeDir, "log.txt"), overwrite: true);
+            }
+            return exeDir;
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return appData;
+        }
+        catch (IOException)
+        {
+            return appData;
+        }
+    }
 
     [JsonIgnore]
     public static string ConfigPath => Path.Combine(ConfigDir, "config.json");

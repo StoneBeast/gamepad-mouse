@@ -125,8 +125,39 @@ internal class ToggleSwitch : UiControl
         };
     }
 
+    private bool _dragging; // 本次按下期间是否发生过拖动（拖动结束的抬起不再当作点击）
+
+    // 点击：直接翻转；也支持按住拖动滑块到另一侧
+    protected override void OnMouseDown(MouseEventArgs e)
+    {
+        if (e.Button == MouseButtons.Left) _dragging = false;
+        base.OnMouseDown(e);
+    }
+
+    protected override void OnMouseMove(MouseEventArgs e)
+    {
+        if (e.Button == MouseButtons.Left)
+        {
+            bool want = e.X > Width / 2;
+            if (want != Checked)
+            {
+                Checked = want;
+                _dragging = true;
+                _timer.Start();
+                CheckedChanged?.Invoke(this, EventArgs.Empty);
+            }
+        }
+        base.OnMouseMove(e);
+    }
+
     protected override void OnClick(EventArgs e)
     {
+        if (_dragging)
+        {
+            _dragging = false; // 拖动后的抬起不算点击，否则会翻转两次
+            base.OnClick(e);
+            return;
+        }
         Checked = !Checked;
         _timer.Start();
         CheckedChanged?.Invoke(this, EventArgs.Empty);

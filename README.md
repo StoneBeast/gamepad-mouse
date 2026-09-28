@@ -37,7 +37,7 @@ git tag v1.2.1 && git push origin v1.2.1
 
 ![浅色主题](docs/settings-light.png)
 - **后台常驻**：托盘图标运行，右键菜单可开关映射、开机自启、退出。
-- **配置持久化**：JSON 配置文件，存于 `%APPDATA%\GamepadMouse\config.json`，修改后即时生效。
+- **配置持久化**：JSON 配置文件存于程序所在目录（便携式，随目录迁移；目录不可写时自动回退 `%APPDATA%`），修改后即时生效。
 - **安全细节**：映射关闭/手柄断开/程序退出时自动释放按住的鼠标键，不会出现"卡键"。
 
 ## 环境要求
@@ -86,7 +86,7 @@ Invoke-WebRequest https://dot.net/v1/dotnet-install.ps1 -OutFile dotnet-install.
 
 ## 配置文件
 
-路径：`%APPDATA%\GamepadMouse\config.json`（首次运行自动生成；设置界面保存后也会更新）。示例：
+路径：程序所在目录下的 `config.json`（首次运行自动生成；设置界面保存后也会更新；老版本在 `%APPDATA%` 的配置会自动迁移）。示例：
 
 ```json
 {
@@ -117,7 +117,7 @@ Invoke-WebRequest https://dot.net/v1/dotnet-install.ps1 -OutFile dotnet-install.
 
 ## 常见问题
 
-- **手柄没反应？** 确认手柄为 XInput 模式（很多手柄有 XInput/DirectInput 切换开关）；托盘悬停可查看连接状态；日志见 `%APPDATA%\GamepadMouse\log.txt`。
+- **手柄没反应？** 确认手柄为 XInput 模式（很多手柄有 XInput/DirectInput 切换开关）；托盘悬停可查看连接状态；日志见 `log.txt（程序所在目录）`。
 - **控制管理员权限的窗口无效？** Windows 的 UIPI 限制，请以管理员身份运行本程序。
 - **光标移动太快/太慢？** 调整「光标速度」或「响应曲线」；小幅移动难控制时增大死区。
 - **按组合键误触发了映射的按键？** 组合键与单键映射独立生效，请选择不常用按键作为组合键。
