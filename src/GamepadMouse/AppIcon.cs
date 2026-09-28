@@ -1,62 +1,68 @@
-﻿using System.Drawing.Drawing2D;
+using System.Drawing.Drawing2D;
+using System.Drawing.Imaging;
 
 namespace GamepadMouse;
 
-/// <summary>程序内生成手柄图标：映射开启为绿色状态点，关闭为灰色，主体随状态换色。</summary>
+/// <summary>
+/// 程序图标：assets/app.ico（由 assets/app-icon.svg 生成）内嵌于程序集。
+/// Create(enabled) 输出运行时状态版本：开启 = 原始彩色，关闭 = 灰阶。
+/// </summary>
 internal static class AppIcon
 {
     private static Icon? _on;
     private static Icon? _off;
+    private static byte[]? _icoBytes;
 
     public static Icon Enabled => _on ??= Create(true);
     public static Icon Disabled => _off ??= Create(false);
 
-    public static Icon Create(bool enabled)
+    private static byte[] EmbeddedIco()
     {
-        using var bmp = new Bitmap(64, 64);
-        using (var g = Graphics.FromImage(bmp))
-        {
-            g.SmoothingMode = SmoothingMode.AntiAlias;
-            // 2x 绘制再由 GetHicon 缩放，减少锯齿：直接以 64x64 画
-            float s = 2f;
-            g.ScaleTransform(s, s);
-
-            var body = enabled ? Ui.AccentColor : Color.FromArgb(94, 100, 112);
-            using var bodyBrush = new SolidBrush(body);
-            using var cutBrush = new SolidBrush(Ui.WindowBg);
-            using var dotBrush = new SolidBrush(enabled ? Ui.SuccessColor : Color.FromArgb(120, 126, 138));
-
-            // 手柄主体：中间横条 + 左右握把
-            g.FillRectangle(bodyBrush, 10, 22, 44, 22);
-            g.FillEllipse(bodyBrush, 3, 24, 24, 24);
-            g.FillEllipse(bodyBrush, 37, 24, 24, 24);
-
-            // 左侧十字键
-            g.FillRectangle(cutBrush, 14, 28, 6, 14);
-            g.FillRectangle(cutBrush, 10, 32, 14, 6);
-
-            // 右侧四键（菱形排列）
-            void Dot(float cx, float cy)
-            {
-                g.FillEllipse(cutBrush, cx - 3f, cy - 3f, 6f, 6f);
-            }
-            Dot(49, 26);
-            Dot(55, 32);
-            Dot(49, 38);
-            Dot(43, 32);
-
-            // 状态点（右下角）
-            g.FillEllipse(new SolidBrush(Ui.WindowBg), 46, 44, 17, 17);
-            g.FillEllipse(dotBrush, 48, 46, 13, 13);
-        }
-        return Icon.FromHandle(bmp.GetHicon());
+        if (_icoBytes != null) return _icoBytes;
+        using var s = typeof(AppIcon).Assembly.GetManifestResourceStream("GamepadMouse.app.ico")
+            ?? throw new InvalidOperationException("内嵌图标资源缺失（GamepadMouse.app.ico）");
+        using var ms = new MemoryStream();
+        s.CopyTo(ms);
+        return _icoBytes = ms.ToArray();
     }
 
-    /// <summary>避免依赖 Ui 命名空间内部类型的封装。</summary>
-    private static class Ui
+    public static Icon Create(bool enabled)
     {
-        public static readonly Color WindowBg = Color.FromArgb(23, 25, 31);
-        public static readonly Color AccentColor = Color.FromArgb(108, 123, 255);
-        public static readonly Color SuccessColor = Color.FromArgb(74, 190, 138);
+        const int size = 64;
+
+        // 取最大帧解码，再高质量缩放
+        Icon large;
+        using (var ms = new MemoryStream(EmbeddedIco()))
+            large = new Icon(ms, 256, 256);
+        using var src = large.ToBitmap();
+
+        var bmp = new Bitmap(size, size);
+        using (var g = Graphics.FromImage(bmp))
+        {
+            g.InterpolationMode = InterpolationMode.HighQualityBicubic;
+            g.SmoothingMode = SmoothingMode.AntiAlias;
+            g.PixelOffsetMode = PixelOffsetMode.HighQuality;
+
+            if (enabled)
+            {
+                g.DrawImage(src, new Rectangle(0, 0, size, size));
+            }
+            else
+            {
+                // 关闭映射：去饱和 + 降低不透明度
+                var attr = new ImageAttributes();
+                attr.SetColorMatrix(new ColorMatrix
+                {
+                    Matrix00 = 0.33f, Matrix01 = 0.33f, Matrix02 = 0.33f,
+                    Matrix10 = 0.59f, Matrix11 = 0.59f, Matrix12 = 0.59f,
+                    Matrix20 = 0.11f, Matrix21 = 0.11f, Matrix22 = 0.11f,
+                    Matrix33 = 0.75f, // alpha
+                });
+                g.DrawImage(src, new Rectangle(0, 0, size, size),
+                    0, 0, src.Width, src.Height, GraphicsUnit.Pixel, attr);
+            }
+        }
+
+        return Icon.FromHandle(bmp.GetHicon());
     }
 }

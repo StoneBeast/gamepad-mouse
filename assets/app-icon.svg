@@ -1,0 +1,47 @@
+<svg width="256" height="256" viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#7D8AFF"/>
+      <stop offset="0.55" stop-color="#6471F6"/>
+      <stop offset="1" stop-color="#4E5CE0"/>
+    </linearGradient>
+  </defs>
+
+  <!-- 圆角徽章背景 -->
+  <rect x="0" y="0" width="256" height="256" rx="58" fill="url(#bg)"/>
+
+  <!-- 手柄主体：横向机身 + 外扩下垂握把 -->
+  <g fill="#FFFFFF">
+    <rect x="30" y="56" width="160" height="54" rx="27"/>
+    <circle cx="62" cy="120" r="35"/>
+    <circle cx="158" cy="120" r="35"/>
+  </g>
+  <!-- 中央凹口：分开两握把 -->
+  <circle cx="110" cy="136" r="16" fill="url(#bg)"/>
+
+  <!-- 十字键（镂空，位于机身左段） -->
+  <g fill="#5C69EE">
+    <rect x="61.5" y="62" width="17" height="42" rx="6"/>
+    <rect x="49" y="74.5" width="42" height="17" rx="6"/>
+  </g>
+
+  <!-- 四键菱形（机身右段） -->
+  <g fill="#5C69EE">
+    <circle cx="150" cy="65" r="7"/>
+    <circle cx="150" cy="107" r="7"/>
+    <circle cx="129" cy="86" r="7"/>
+    <circle cx="171" cy="86" r="7"/>
+  </g>
+
+  <!-- 鼠标指针（右下角，白底深描边保证与手柄分离） -->
+  <path d="M168 142
+           L168 206
+           L182 192
+           L191.5 213
+           L205 206.5
+           L195.5 186
+           L214 183.5
+           Z"
+        fill="#FFFFFF" stroke="#4E5CE0" stroke-width="9"
+        stroke-linejoin="round"/>
+</svg>

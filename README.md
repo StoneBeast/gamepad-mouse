@@ -1,5 +1,9 @@
 # GamepadMouse（手柄映射鼠标）
 
+<p align="center">
+  <img src="assets/app-icon.svg" width="128" alt="GamepadMouse 图标">
+</p>
+
 一个 Windows 后台托盘程序：把手柄（XInput 手柄）映射为鼠标使用，**映射的开关完全由手柄上的组合键/按键完成**，所有按键映射和参数均可自定义，无需依赖键盘鼠标即可全程操作。
 
 ## 功能特性
@@ -108,13 +112,32 @@ src/GamepadMouse/
 ├── MouseSimulator.cs   SendInput / SetCursorPos 封装
 ├── MappingConfig.cs    配置模型与 JSON 持久化
 ├── SettingsForm.cs     设置界面（深色现代风格，含组合键录制）
-├── AppIcon.cs          程序内生成的动态手柄图标
+├── AppIcon.cs          图标加载与状态化处理（开启彩色 / 关闭灰阶）
 ├── Autostart.cs        开机自启（HKCU 注册表）
 ├── Log.cs              文件日志
 └── Ui/
-    ├── UiTheme.cs        深色主题配色 / 字体 / 圆角绘制
+    ├── UiTheme.cs        深浅双主题配色 / 字体 / 圆角绘制
     └── ModernControls.cs 自绘控件（卡片/按钮/开关/滑杆/分段/胶囊）
+assets/
+├── app-icon.svg        图标源文件（矢量）
+├── app-icon-256.png    渲染中间产物（Chrome headless）
+├── app.ico             多尺寸图标（16~256，嵌入 exe）
+└── icon-original.png   早期手绘风格参考图
+tools/IcoGen/           PNG → 多尺寸 .ico 编码工具
 scripts/build.ps1       构建脚本（含自包含发布）
+```
+
+### 图标再生成流程
+
+修改 `assets/app-icon.svg` 后：
+
+```powershell
+# 1. SVG → 256px 透明 PNG（Chrome headless 渲染）
+& "C:\Program Files\Google\Chrome\Application\chrome.exe" --headless=new --disable-gpu `
+    --default-background-color=00000000 --window-size=256,256 `
+    --screenshot="assets\app-icon-256.png" "file:///<仓库路径>/assets/app-icon.svg"
+# 2. PNG → 多尺寸 .ico
+dotnet run --project tools/IcoGen -- assets/app-icon-256.png assets/app.ico
 ```
 
 ## License
