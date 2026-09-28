@@ -62,6 +62,7 @@ internal class SettingsForm : Form
         BuildStickCard();
         BuildBehaviorCard();
         BuildFooter();
+        RecolorBackgrounds(this); // 构建时即按当前主题修正圆角控件背景
 
         // 手柄状态轮询（头部副标题）
         _padTimer = new System.Windows.Forms.Timer { Interval = 300 };
@@ -177,14 +178,36 @@ internal class SettingsForm : Form
             l.Invalidate();
         }
 
-        _chips.BackColor = UiTheme.CardBg;
         RebuildChips();
 
         StyleGrid();
         _grid.Invalidate();
 
+        RecolorBackgrounds(this);
+
         UiTheme.ApplyTitleBarTheme(this);
         Invalidate(true);
+    }
+
+    /// <summary>
+    /// 递归修正自绘控件的 BackColor。圆角控件的四角/间隙会透出所在表面的颜色
+    /// （由 OnPaintBackground 以 BackColor 填充），实时切换主题时必须同步更新，
+    /// 否则会残留构建时的深色背景形成"黑边"。
+    /// </summary>
+    private void RecolorBackgrounds(Control root)
+    {
+        foreach (Control c in root.Controls)
+        {
+            if (c is Card)
+                c.BackColor = UiTheme.WindowBg;                                  // 卡片圆角透出窗口底色
+            else if (c is UiControl)
+                c.BackColor = ReferenceEquals(c.Parent, _header)
+                    ? UiTheme.WindowBg                                           // 头部控件透出窗口底色
+                    : UiTheme.CardBg;                                            // 卡片内控件透出卡片底色
+            else if (c is FlowLayoutPanel)
+                c.BackColor = UiTheme.CardBg;
+            RecolorBackgrounds(c);
+        }
     }
 
     private void UpdatePadStatus()
