@@ -94,7 +94,8 @@ Invoke-WebRequest https://dot.net/v1/dotnet-install.ps1 -OutFile dotnet-install.
   "MoveStick": "Right",                 // 移动光标的摇杆：Left/Right
   "ScrollStick": "Left",                // 滚动摇杆：Left/Right/None
   "Sensitivity": 2500,                  // 光标速度（像素/秒）
-  "ScrollSensitivity": 6,               // 滚轮速度（格/秒）
+  "ScrollSensitivity": 6,               // 滚轮速度（格/秒，满偏移）
+  "SmoothWheel": true,                  // 滚轮平滑模式（轻推慢滚、重推快滚）
   "Deadzone": 0.18,                     // 摇杆死区
   "Curve": 1.6,                         // 响应曲线指数（越大小幅度越精细）
   "PollRateMs": 8,                      // 轮询间隔

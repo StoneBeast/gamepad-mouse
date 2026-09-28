@@ -26,6 +26,7 @@ internal class SettingsForm : Form
     private ToggleSwitch _swStartEnabled = null!;
     private ToggleSwitch _swVibrate = null!;
     private Segmented _segTheme = null!;
+    private Segmented _segWheelMode = null!;
     private readonly Label _padStatus = new();
     private Panel _header = null!;
     private Icon _headerIcon;
@@ -49,7 +50,7 @@ internal class SettingsForm : Form
         MaximizeBox = false;
         MinimizeBox = false;
         StartPosition = FormStartPosition.CenterScreen;
-        ClientSize = new Size(660, 802);
+        ClientSize = new Size(660, 846);
         BackColor = UiTheme.WindowBg;
         AutoScroll = true;
         Icon = _headerIcon = AppIcon.Create(mapper.Enabled);
@@ -118,6 +119,7 @@ internal class SettingsForm : Form
         Sensitivity = src.Sensitivity,
         ScrollSensitivity = src.ScrollSensitivity,
         Deadzone = src.Deadzone,
+        SmoothWheel = src.SmoothWheel,
         Curve = src.Curve,
         PollRateMs = src.PollRateMs,
         TriggerThreshold = src.TriggerThreshold,
@@ -149,7 +151,7 @@ internal class SettingsForm : Form
             g.SmoothingMode = SmoothingMode.AntiAlias;
             g.DrawIcon(_headerIcon, new Rectangle(16, 13, 34, 34));
             TextRenderer.DrawText(g, "GamepadMouse", UiTheme.FontTitle, new Point(62, 10), UiTheme.TextPrimary);
-            TextRenderer.DrawText(g, _padStatus.Text.Length == 0 ? "手柄映射鼠标 v1.2" : _padStatus.Text,
+            TextRenderer.DrawText(g, _padStatus.Text.Length == 0 ? "手柄映射鼠标 v1.3" : _padStatus.Text,
                 UiTheme.FontTitleSub, new Point(64, 36), UiTheme.TextSecondary);
         };
         return p;
@@ -214,9 +216,9 @@ internal class SettingsForm : Form
     {
         var scratch = new XInput.State();
         bool connected = XInput.Available && XInput.GetState(0, ref scratch);
-        string text = !XInput.Available ? "手柄映射鼠标 v1.2 · 未找到 XInput 驱动"
-            : connected ? "手柄映射鼠标 v1.2 · 手柄已连接"
-            : "手柄映射鼠标 v1.2 · 手柄未连接，等待中…";
+        string text = !XInput.Available ? "手柄映射鼠标 v1.3 · 未找到 XInput 驱动"
+            : connected ? "手柄映射鼠标 v1.3 · 手柄已连接"
+            : "手柄映射鼠标 v1.3 · 手柄未连接，等待中…";
         _padStatus.Text = text;
         _header.Invalidate();
     }
@@ -453,7 +455,7 @@ internal class SettingsForm : Form
 
     private void BuildStickCard()
     {
-        var card = new Card("摇杆与手感", new Point(12, 472), new Size(636, 192));
+        var card = new Card("摇杆与手感", new Point(12, 472), new Size(636, 236));
 
         var lblMove = Lbl("移动摇杆", new Point(24, 48), new Size(70, 24));
         _segMove = new Segmented(["左摇杆", "右摇杆"], _working.MoveStick == "Left" ? 0 : 1, new Point(100, 44), new Size(160, 28));
@@ -486,11 +488,16 @@ internal class SettingsForm : Form
             Format = v => $"{v:0.00}",
         };
 
+        var lblWheelMode = Lbl("滚轮模式", new Point(24, 200), new Size(70, 24));
+        _segWheelMode = new Segmented(["平滑滚动", "整格滚动"], _working.SmoothWheel ? 0 : 1, new Point(100, 196), new Size(200, 28));
+        var lblWheelHint = Lbl("平滑：轻推慢滚、重推快滚；整格：兼容旧程序", new Point(312, 200), new Size(280, 24), secondary: true, font: UiTheme.FontSmall);
+
         card.Controls.AddRange(
         [
             lblMove, _segMove, lblScroll, _segScroll,
             lblSens, _sldSens, lblScrollSpeed, _sldScroll,
             lblDead, _sldDeadzone, lblCurve, _sldCurve,
+            lblWheelMode, _segWheelMode, lblWheelHint,
         ]);
         Controls.Add(card);
     }
@@ -499,7 +506,7 @@ internal class SettingsForm : Form
 
     private void BuildBehaviorCard()
     {
-        var card = new Card("行为", new Point(12, 672), new Size(636, 80));
+        var card = new Card("行为", new Point(12, 716), new Size(636, 80));
 
         var lblAuto = Lbl("开机自启", new Point(24, 46), new Size(68, 24));
         _swAutostart = new ToggleSwitch(Autostart.IsEnabled(), new Point(96, 44));
@@ -518,11 +525,11 @@ internal class SettingsForm : Form
 
     private void BuildFooter()
     {
-        var btnDefaults = new ModernButton("恢复默认", new Point(16, 760), new Size(96, 34));
+        var btnDefaults = new ModernButton("恢复默认", new Point(16, 804), new Size(96, 34));
         btnDefaults.Click += (_, _) => ResetDefaults();
-        var btnCancel = new ModernButton("取消", new Point(446, 760), new Size(90, 34));
+        var btnCancel = new ModernButton("取消", new Point(446, 804), new Size(90, 34));
         btnCancel.Click += (_, _) => Close();
-        var btnOk = new ModernButton("保存并应用", new Point(544, 760), new Size(104, 34), ModernButton.Style.Primary);
+        var btnOk = new ModernButton("保存并应用", new Point(544, 804), new Size(104, 34), ModernButton.Style.Primary);
         btnOk.Click += (_, _) => SaveAndClose();
         Controls.AddRange([btnDefaults, btnCancel, btnOk]);
         KeyPreview = true;
@@ -668,6 +675,7 @@ internal class SettingsForm : Form
         _sldScroll.Value = _working.ScrollSensitivity;
         _sldDeadzone.Value = _working.Deadzone;
         _sldCurve.Value = _working.Curve;
+        _segWheelMode.SetSelected(def.SmoothWheel ? 0 : 1);
         _swStartEnabled.SetChecked(true);
         _swVibrate.SetChecked(true);
 
@@ -690,6 +698,7 @@ internal class SettingsForm : Form
         _working.ScrollSensitivity = _sldScroll.Value;
         _working.Deadzone = _sldDeadzone.Value;
         _working.Curve = _sldCurve.Value;
+        _working.SmoothWheel = _segWheelMode.Selected == 0;
         _working.StartEnabled = _swStartEnabled.Checked;
         _working.VibrateOnToggle = _swVibrate.Checked;
         _working.Normalize();

@@ -17,7 +17,7 @@ internal class Mapper : IDisposable
     private bool _chordLatch;           // 组合键防重复触发
     private HashSet<string> _prevHeld = new(); // 上一帧按下的按键（含扳机），用于边沿检测
     private double _moveAccX, _moveAccY; // 亚像素累计
-    private double _wheelAcc;            // 滚轮累计（单位：格）
+    private double _wheelAcc;            // 滚轮增量累计（单位：1/120 格）
     private double _hWheelAcc;
     private readonly HashSet<string> _heldMouseActions = new(); // 按住中的点击类动作，防止失联时卡键
     private readonly Stopwatch _clock = new();
@@ -204,6 +204,9 @@ internal class Mapper : IDisposable
             MouseSimulator.MoveCursor(ix, iy);
 
         // ---- 4. 另一个摇杆 → 滚轮 / 水平滚动 ----
+        // 摇杆经死区+响应曲线整形（与光标一致）：轻推输出小 → 慢滚，重推输出大 → 快滚。
+        // 平滑模式：按任意增量连续发送（支持的程序获得细腻的连续滚动）；
+        // 整格模式：攒满一格（120）才发送，兼容只认整格增量的旧程序。
         if (cfg.ScrollStick != "None")
         {
             (short sx, short sy) = cfg.ScrollStick == "Left"
@@ -213,13 +216,24 @@ internal class Mapper : IDisposable
             double vy = ShapeAxis(sy, cfg.Deadzone, cfg.Curve) * cfg.ScrollSensitivity * dt;
             double vx = ShapeAxis(sx, cfg.Deadzone, cfg.Curve) * cfg.ScrollSensitivity * dt;
 
-            _wheelAcc += vy;
-            _hWheelAcc += vx;
+            _wheelAcc += vy * 120.0;  // 累计单位：滚轮增量（一格 = 120）
+            _hWheelAcc += vx * 120.0;
 
-            int wy = (int)_wheelAcc; // 整格才发送（一格 = 120）
-            int wx = (int)_hWheelAcc;
-            if (wy != 0) { _wheelAcc -= wy; MouseSimulator.Wheel(wy * 120); }
-            if (wx != 0) { _hWheelAcc -= wx; MouseSimulator.HWheel(wx * 120); }
+            int wy, wx;
+            if (cfg.SmoothWheel)
+            {
+                wy = (int)_wheelAcc;  // 任意大小增量（可为 1~119），轻推也能连续慢滚
+                wx = (int)_hWheelAcc;
+                if (wy != 0) { _wheelAcc -= wy; MouseSimulator.Wheel(wy); }
+                if (wx != 0) { _hWheelAcc -= wx; MouseSimulator.HWheel(wx); }
+            }
+            else
+            {
+                wy = (int)(_wheelAcc / 120);
+                wx = (int)(_hWheelAcc / 120);
+                if (wy != 0) { _wheelAcc -= wy * 120; MouseSimulator.Wheel(wy * 120); }
+                if (wx != 0) { _hWheelAcc -= wx * 120; MouseSimulator.HWheel(wx * 120); }
+            }
         }
 
         // ---- 5. 按键映射（边沿触发）----

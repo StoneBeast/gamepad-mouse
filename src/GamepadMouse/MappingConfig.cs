@@ -60,8 +60,11 @@ public class MappingConfig
     /// <summary>光标满偏移速度（像素/秒）。</summary>
     public double Sensitivity { get; set; } = 2500;
 
-    /// <summary>滚轮滚动速度（格/秒）。</summary>
+    /// <summary>滚轮滚动速度（格/秒，满偏移时）。</summary>
     public double ScrollSensitivity { get; set; } = 6;
+
+    /// <summary>滚轮平滑模式：true=按任意增量连续发送（轻推慢滚、重推快滚）；false=攒满整格发送（兼容旧程序）。</summary>
+    public bool SmoothWheel { get; set; } = true;
 
     /// <summary>摇杆死区（0~0.5）。</summary>
     public double Deadzone { get; set; } = 0.18;
