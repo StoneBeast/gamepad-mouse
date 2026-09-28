@@ -161,6 +161,10 @@ scripts/build.ps1       构建脚本（含自包含发布）
 dotnet run --project tools/IcoGen -- assets/app-icon-256.png assets/app.ico
 ```
 
+> **提示**：手动更新已安装的版本时，必须使用 `dotnet publish` 的自包含单文件产物
+> （`scripts/update-installed.ps1` 一键完成）；`bin\Release` 下的开发构建只是启动器，
+> 单独复制到安装目录会因缺少 `GamepadMouse.dll`/`runtimeconfig.json` 无法启动。
+
 ## License
 
 MIT
