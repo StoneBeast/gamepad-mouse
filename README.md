@@ -7,7 +7,9 @@
 - **手柄 → 鼠标**：摇杆控制光标移动（死区 + 响应曲线整形），按键模拟左/右/中键点击、双击、滚轮上下左右滚动。
 - **组合键开关映射**：默认按住 `Back + Start` 切换映射开/关（可录制为任意按键组合），开关时手柄震动提示；也可以把任意单个按键映射为「开关映射」动作。
 - **全量自定义**：16 个手柄按键（A/B/X/Y、LB/RB、LT/RT、Back/Start、LSB/RSB、十字键）都可映射为任意鼠标动作；移动/滚动摇杆可互换；灵敏度、死区、响应曲线、轮询间隔、扳机阈值均可调。
-- **图形设置界面**：双击托盘图标打开，支持直接在手柄上「录制」组合键。
+- **深色现代设置界面**：双击托盘图标打开（或 `GamepadMouse.exe --settings`），自绘圆角卡片 / 拨动开关 / 滑杆 / 分段选择器，支持直接在手柄上「录制」组合键。
+
+![设置界面](docs/settings.png)
 - **后台常驻**：托盘图标运行，右键菜单可开关映射、开机自启、退出。
 - **配置持久化**：JSON 配置文件，存于 `%APPDATA%\GamepadMouse\config.json`，修改后即时生效。
 - **安全细节**：映射关闭/手柄断开/程序退出时自动释放按住的鼠标键，不会出现"卡键"。
@@ -96,15 +98,19 @@ Invoke-WebRequest https://dot.net/v1/dotnet-install.ps1 -OutFile dotnet-install.
 
 ```
 src/GamepadMouse/
-├── Program.cs          入口：单实例互斥、托盘启动
-├── TrayContext.cs      托盘图标与菜单
+├── Program.cs          入口：单实例互斥、托盘启动（--settings 直接打开设置）
+├── TrayContext.cs      托盘图标与菜单（图标随映射状态变色）
 ├── Mapper.cs           映射引擎：轮询手柄→鼠标（组合键、摇杆、按键边沿）
 ├── XInput.cs           XInput 动态加载封装（1_4 / 1_3 / 9_1_0）
 ├── MouseSimulator.cs   SendInput / SetCursorPos 封装
 ├── MappingConfig.cs    配置模型与 JSON 持久化
-├── SettingsForm.cs     设置界面（含组合键录制）
+├── SettingsForm.cs     设置界面（深色现代风格，含组合键录制）
+├── AppIcon.cs          程序内生成的动态手柄图标
 ├── Autostart.cs        开机自启（HKCU 注册表）
-└── Log.cs              文件日志
+├── Log.cs              文件日志
+└── Ui/
+    ├── UiTheme.cs        深色主题配色 / 字体 / 圆角绘制
+    └── ModernControls.cs 自绘控件（卡片/按钮/开关/滑杆/分段/胶囊）
 scripts/build.ps1       构建脚本（含自包含发布）
 ```
 

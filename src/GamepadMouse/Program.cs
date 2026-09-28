@@ -5,7 +5,7 @@ internal static class Program
     private const string MutexName = "Local\\GamepadMouse_SingleInstance";
 
     [STAThread]
-    static void Main()
+    static void Main(string[] args)
     {
         using var mutex = new Mutex(initiallyOwned: true, MutexName, out bool createdNew);
         if (!createdNew)
@@ -21,7 +21,8 @@ internal static class Program
         {
             var config = MappingConfig.Load();
             var mapper = new Mapper(config);
-            Application.Run(new TrayContext(mapper));
+            bool openSettings = args.Any(a => a is "--settings" or "-s");
+            Application.Run(new TrayContext(mapper, openSettings));
         }
         catch (Exception ex)
         {

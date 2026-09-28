@@ -1,7 +1,7 @@
 ﻿namespace GamepadMouse;
 
 /// <summary>
-/// 托盘上下文：NotifyIcon + 菜单（开关映射 / 设置 / 自启 / 退出）。
+/// 托盘上下文：NotifyIcon + 菜单（开关映射 / 设置 / 自启 / 退出），图标随映射状态变色。
 /// </summary>
 internal class TrayContext : ApplicationContext
 {
@@ -11,7 +11,7 @@ internal class TrayContext : ApplicationContext
     private readonly ToolStripMenuItem _menuAutostart = null!;
     private SettingsForm? _settings;
 
-    public TrayContext(Mapper mapper)
+    public TrayContext(Mapper mapper, bool openSettingsOnStart = false)
     {
         _mapper = mapper;
 
@@ -46,7 +46,7 @@ internal class TrayContext : ApplicationContext
 
         _tray = new NotifyIcon
         {
-            Icon = SystemIcons.Application,
+            Icon = AppIcon.Create(mapper.Enabled),
             Text = TooltipText(),
             Visible = true,
             ContextMenuStrip = menu,
@@ -74,6 +74,9 @@ internal class TrayContext : ApplicationContext
 
         _mapper.Start();
         UpdateUiState(_mapper.Enabled);
+
+        if (openSettingsOnStart)
+            ShowSettings();
     }
 
     private string TooltipText() => _mapper.Enabled
@@ -83,6 +86,7 @@ internal class TrayContext : ApplicationContext
     private void UpdateUiState(bool on)
     {
         _menuToggle.Checked = on;
+        _tray.Icon = AppIcon.Create(on);
         _tray.Text = TooltipText();
     }
 
