@@ -25,8 +25,14 @@ UninstallDisplayIcon={app}\GamepadMouse.exe
 LicenseFile=..\LICENSE
 
 [Languages]
-Name: "chinese"; MessagesFile: "ChineseSimplified.isl"
+#if FileExists(AddBackslash(CompilerPath) + "Languages\ChineseSimplified.isl")
+; Inno Setup 6.4+ 官方内置简体中文
+Name: "chinese"; MessagesFile: "compiler:Languages\ChineseSimplified.isl"
 Name: "english"; MessagesFile: "compiler:Default.isl"
+#else
+; 旧版回退：仅英文向导
+Name: "english"; MessagesFile: "compiler:Default.isl"
+#endif
 
 [Files]
 Source: "..\dist\publish\GamepadMouse.exe"; DestDir: "{app}"; Flags: ignoreversion

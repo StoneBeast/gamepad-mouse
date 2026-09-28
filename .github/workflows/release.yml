@@ -58,12 +58,6 @@ jobs:
           Compress-Archive -Path dist/publish/GamepadMouse.exe `
             -DestinationPath dist/GamepadMouse-${{ steps.ver.outputs.version }}-portable.zip
 
-      - name: 下载 Inno Setup 中文语言包
-        shell: pwsh
-        run: |
-          $url = "https://raw.githubusercontent.com/jrsoftware/issrc/main/Files/Languages/Unofficial/ChineseSimplified.isl"
-          Invoke-WebRequest -Uri $url -OutFile installer/ChineseSimplified.isl
-
       - name: 编译安装包（Inno Setup）
         shell: pwsh
         run: |
