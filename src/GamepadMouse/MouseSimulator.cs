@@ -85,6 +85,10 @@ internal static class MouseSimulator
     [DllImport("user32.dll")]
     private static extern bool SetPhysicalCursorPos(int x, int y);
 
+    /// <summary>SendInput 被系统拒绝（错误码 5，UIPI 隔离）时触发一次，供托盘提示。</summary>
+    public static event Action? InputDenied;
+    private static bool _deniedNotified;
+
     private static void SendMouse(uint flags, uint mouseData = 0)
     {
         var input = new INPUT
@@ -105,7 +109,15 @@ internal static class MouseSimulator
         };
         var inputs = new INPUT[] { input };
         if (SendInput(1, inputs, Marshal.SizeOf<INPUT>()) != 1)
-            Log.Warn($"SendInput 失败，错误码 {Marshal.GetLastWin32Error()}（如需控制管理员权限的窗口，请以管理员身份运行本程序）");
+        {
+            var err = Marshal.GetLastWin32Error();
+            Log.Warn($"SendInput 失败，错误码 {err}（如需控制管理员权限的窗口，请以管理员身份运行本程序）");
+            if (err == 5 && !_deniedNotified)
+            {
+                _deniedNotified = true;
+                InputDenied?.Invoke();
+            }
+        }
     }
 
     public static void MoveCursor(int dx, int dy)

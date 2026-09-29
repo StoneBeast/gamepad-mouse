@@ -12,6 +12,7 @@
     <Product>GamepadMouse 手柄映射鼠标</Product>
     <Description>后台托盘程序：将手柄映射为鼠标，组合键开关映射，全部可自定义</Description>
     <ApplicationIcon>..\..\assets\app.ico</ApplicationIcon>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
   </PropertyGroup>
 
   <ItemGroup>

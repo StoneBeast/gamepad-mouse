@@ -24,7 +24,7 @@ internal class TrayContext : ApplicationContext
 
         // 不用 CheckOnClick：它会在 Click 事件前自动翻转 Checked，处理器里再取反
         // 等于双重取反，SetEnabled 永远收到旧状态，开关形同虚设。
-        // 勾选状态统一以注册表为准，点击时取“显示状态的反面”，结束后回读校正。
+        // 勾选状态统一以计划任务为准，点击时取“显示状态的反面”，结束后回读校正。
         _menuAutostart = new ToolStripMenuItem("开机自动启动", null, (_, _) =>
         {
             bool want = !_menuAutostart.Checked;
@@ -52,7 +52,7 @@ internal class TrayContext : ApplicationContext
         menu.Items.Add("关于…", null, (_, _) => ShowAbout());
         menu.Items.Add(new ToolStripSeparator());
         menu.Items.Add("退出", null, (_, _) => ExitApp());
-        // 设置窗口等其它途径也可能改过自启，弹出时以注册表为准刷新勾选
+        // 设置窗口等其它途径也可能改过自启，弹出时以计划任务为准刷新勾选
         menu.Opening += (_, _) => _menuAutostart.Checked = Autostart.IsEnabled();
 
         _tray = new NotifyIcon
@@ -86,6 +86,10 @@ internal class TrayContext : ApplicationContext
         _mapper.Start();
         UpdateUiState(_mapper.Enabled);
 
+        MouseSimulator.InputDenied += NotifyNotElevated;
+        if (!Elevation.IsAdmin())
+            NotifyNotElevated();
+
         if (openSettingsOnStart)
             ShowSettings();
     }
@@ -93,6 +97,18 @@ internal class TrayContext : ApplicationContext
     private string TooltipText() => _mapper.Enabled
         ? "GamepadMouse：映射已开启（双击打开设置）"
         : "GamepadMouse：映射已关闭（双击打开设置）";
+
+    /// <summary>未提权时映射无法作用于管理员权限的窗口（如游戏启动器），气泡提示一次。</summary>
+    private void NotifyNotElevated()
+    {
+        void show() => _tray.ShowBalloonTip(8000, "GamepadMouse 未以管理员身份运行",
+            "映射将无法操作管理员权限的窗口（如游戏启动器、任务管理器）。\n请重新以管理员身份运行本程序。",
+            ToolTipIcon.Warning);
+        if (_tray.ContextMenuStrip!.InvokeRequired)
+            _tray.ContextMenuStrip.BeginInvoke(show);
+        else
+            show();
+    }
 
     private void UpdateUiState(bool on)
     {
