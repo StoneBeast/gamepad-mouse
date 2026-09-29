@@ -60,21 +60,26 @@ internal class Mapper : IDisposable
         if (!on) ReleaseAllHeld();
         Log.Info($"映射{(on ? "已开启" : "已关闭")}");
         EnabledChanged?.Invoke(on);
-        if (_enabled && Config.VibrateOnToggle) VibrateToggle();
-        else if (!on && Config.VibrateOnToggle) VibrateToggle();
+        if (_enabled && Config.VibrateOnToggle) VibrateToggle(on: true);
+        else if (!on && Config.VibrateOnToggle) VibrateToggle(on: false);
     }
 
     public void Toggle() => SetEnabled(!_enabled);
 
-    private void VibrateToggle()
+    /// <summary>开关映射震动反馈：开启短震，关闭长震。</summary>
+    private void VibrateToggle(bool on)
     {
         try
         {
             XInput.SetVibration(0, 32000, 32000);
             var t = new Thread(() =>
             {
-                Thread.Sleep(220);
-                XInput.SetVibration(0, 0, 0);
+                try
+                {
+                    Thread.Sleep(on ? 200 : 800);
+                    XInput.SetVibration(0, 0, 0);
+                }
+                catch { /* 震动失败忽略 */ }
             }) { IsBackground = true };
             t.Start();
         }
