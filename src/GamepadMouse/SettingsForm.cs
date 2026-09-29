@@ -657,19 +657,24 @@ internal class SettingsForm : Form
         // 其 DeviceDpi 即真实 DPI；主窗体的 ScaleForDpi 只作用于主窗体子树）
         int s(int v) => (int)Math.Round(v * DeviceDpi / 96f);
         dlg.ClientSize = new Size(s(420), s(190));
+        dlg.HandleCreated += (_, _) => UiTheme.ApplyTitleBarTheme(dlg);
 
         var card = new Card("录制组合键", new Point(s(12), s(12)), new Size(s(396), s(120)));
+        // 提示与实时按键面板放进卡片内部：卡片不透明，若与卡片同层级且先于卡片
+        // 添加（WinForms 先添加的在顶层），会被卡片整体遮挡——提示与“当前按住”
+        // 因此从未显示过
         var hint = new Label
         {
             Text = "请同时按住想使用的按键，然后点击「使用当前按键」。",
-            Location = new Point(s(24), s(42)),
+            Location = new Point(s(12), s(30)),
             Size = new Size(s(350), s(20)),
             ForeColor = UiTheme.TextSecondary,
+            BackColor = UiTheme.CardBg,
             Font = UiTheme.FontSmall,
         };
         var live = new FlowLayoutPanel
         {
-            Location = new Point(s(24), s(68)),
+            Location = new Point(s(12), s(56)),
             Size = new Size(s(350), s(40)),
             BackColor = UiTheme.CardBg,
         };
@@ -679,7 +684,9 @@ internal class SettingsForm : Form
         t.Tick += (_, _) =>
         {
             var held = CurrentHeld();
-            if (held.Count == current.Count && held.SetEquals(current)) return;
+            // live.Controls.Count==0 时也刷新一次，否则无手柄/未按键时
+            // “当前按住：（无）”的初始提示永远不会出现
+            if (held.Count == current.Count && held.SetEquals(current) && live.Controls.Count > 0) return;
             current = held;
             foreach (Control old in live.Controls) old.Dispose();
             live.Controls.Clear();
@@ -710,7 +717,8 @@ internal class SettingsForm : Form
         btnOk.Click += (_, _) => { dlg.Tag = true; dlg.Close(); };
         btnCancel.Click += (_, _) => { dlg.Tag = false; dlg.Close(); };
 
-        dlg.Controls.AddRange([card, hint, live, btnOk, btnCancel]);
+        dlg.Controls.AddRange([btnOk, btnCancel, card]);
+        card.Controls.AddRange([hint, live]);
         dlg.FormClosed += (_, _) => { t.Stop(); t.Dispose(); };
         dlg.ShowDialog(this);
 
