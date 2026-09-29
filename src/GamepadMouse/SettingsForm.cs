@@ -182,7 +182,7 @@ internal class SettingsForm : Form
             g.SmoothingMode = SmoothingMode.AntiAlias;
             g.DrawIcon(_headerIcon, new Rectangle(s(16), s(13), s(34), s(34)));
             TextRenderer.DrawText(g, "GamepadMouse", UiTheme.FontTitle, new Point(s(62), s(10)), UiTheme.TextPrimary);
-            TextRenderer.DrawText(g, _padStatus.Text.Length == 0 ? "手柄映射鼠标 v1.3" : _padStatus.Text,
+            TextRenderer.DrawText(g, _padStatus.Text.Length == 0 ? $"手柄映射鼠标 v{UpdateChecker.CurrentVersion()}" : _padStatus.Text,
                 UiTheme.FontTitleSub, new Point(s(64), s(36)), UiTheme.TextSecondary);
         };
         return p;
@@ -247,9 +247,9 @@ internal class SettingsForm : Form
     {
         var scratch = new XInput.State();
         bool connected = XInput.Available && XInput.GetState(0, ref scratch);
-        string text = !XInput.Available ? "手柄映射鼠标 v1.3 · 未找到 XInput 驱动"
-            : connected ? "手柄映射鼠标 v1.3 · 手柄已连接"
-            : "手柄映射鼠标 v1.3 · 手柄未连接，等待中…";
+        string text = !XInput.Available ? $"手柄映射鼠标 v{UpdateChecker.CurrentVersion()} · 未找到 XInput 驱动"
+            : connected ? $"手柄映射鼠标 v{UpdateChecker.CurrentVersion()} · 手柄已连接"
+            : $"手柄映射鼠标 v{UpdateChecker.CurrentVersion()} · 手柄未连接，等待中…";
         _padStatus.Text = text;
         _header.Invalidate();
     }
