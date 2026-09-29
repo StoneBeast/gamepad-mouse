@@ -96,7 +96,7 @@ internal class SettingsForm : Form
         // 标题栏跟随主题
         HandleCreated += (_, _) => UiTheme.ApplyTitleBarTheme(this);
         // 窗口复用时（保存后不关闭，下次从托盘打开）自启开关可能已通过托盘菜单
-        // 或其它实例改动过，激活时以注册表为准刷新
+        // 或其它实例改动过，激活时以计划任务为准刷新
         Activated += (_, _) => _swAutostart.SetChecked(Autostart.IsEnabled());
         // 清除表格初始选中高亮（句柄创建后部分状态会重建）
         Shown += (_, _) =>
