@@ -103,12 +103,19 @@ internal class TrayContext : ApplicationContext
     {
         if (_settings != null && !_settings.IsDisposed)
         {
+            if (_settings.WindowState == FormWindowState.Minimized)
+                _settings.WindowState = FormWindowState.Normal;
+            // 短暂置顶确保一定能盖过其它窗口，随后恢复普通层级
+            _settings.TopMost = true;
             _settings.Activate();
+            _settings.TopMost = false;
             return;
         }
         _settings = new SettingsForm(_mapper);
         _settings.Show();
+        _settings.TopMost = true;
         _settings.Activate();
+        _settings.TopMost = false;
     }
 
     private void ExitApp()

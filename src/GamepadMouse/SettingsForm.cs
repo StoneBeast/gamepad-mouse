@@ -54,7 +54,9 @@ internal class SettingsForm : Form
         AutoScaleMode = AutoScaleMode.None;
         FormBorderStyle = FormBorderStyle.FixedDialog;
         MaximizeBox = false;
-        MinimizeBox = false;
+        // 必须允许最小化：窗口没有 WS_MINIMIZEBOX 时，任务栏按钮的
+        // 「点击最小化 / 再点还原置顶」切换会被外壳禁用
+        MinimizeBox = true;
         StartPosition = FormStartPosition.CenterScreen;
         ClientSize = new Size(660, 846);
         BackColor = UiTheme.WindowBg;
