@@ -18,14 +18,6 @@
 | `GamepadMouse-x.y.z-portable.zip` | **便携版**：解压即用的单个 exe |
 | `GamepadMouse-setup-x.y.z.exe` | **安装包**：中文向导、免管理员权限（按用户安装），含开始菜单/桌面快捷方式，支持卸载 |
 
-**发布新版本**：推送 `v` 开头的 tag，GitHub Actions 自动构建并发布：
-
-```bash
-git tag v1.2.1 && git push origin v1.2.1
-```
-
-也可在 Actions 页面手动触发 Release 工作流（填版本号）。
-
 ## 功能特性
 
 - **手柄 → 鼠标**：摇杆控制光标移动（死区 + 响应曲线整形），按键模拟左/右/中键点击、双击、滚轮上下左右滚动。
@@ -58,15 +50,7 @@ git tag v1.2.1 && git push origin v1.2.1
 
 运行 `src\GamepadMouse\bin\Release\net8.0-windows\GamepadMouse.exe`（或发布目录中的单文件 exe），程序出现在系统托盘。
 
-### 开发环境
-
-本机 .NET SDK 安装在 **`D:\software\dotnet-sdk`**（安装到 D 盘、不占用 C 盘空间），`scripts\build.ps1` 已自动指向该路径；如装在别处请自行修改。SDK 安装方式：
-
-```powershell
-# dotnet-install 脚本安装到指定目录
-Invoke-WebRequest https://dot.net/v1/dotnet-install.ps1 -OutFile dotnet-install.ps1
-.\dotnet-install.ps1 -Channel 8.0 -InstallDir D:\software\dotnet-sdk
-```
+> 需要 .NET 8 SDK；未安装时可参考官方 [dotnet-install 脚本](https://dot.net/v1/dotnet-install.ps1)安装 8.0 版本。
 
 ## 默认按键映射
 
@@ -113,7 +97,7 @@ Invoke-WebRequest https://dot.net/v1/dotnet-install.ps1 -OutFile dotnet-install.
 
 可用动作：`None`、`LeftClick`、`RightClick`、`MiddleClick`、`WheelUp`、`WheelDown`、`WheelLeft`、`WheelRight`、`DoubleLeftClick`、`ToggleMapping`。
 
-更多细节见 [docs/使用说明.md](docs/使用说明.md) 与 [docs/架构说明.md](docs/架构说明.md)。
+更多细节见 [docs/使用说明.md](docs/使用说明.md)。
 
 ## 常见问题
 
@@ -121,51 +105,6 @@ Invoke-WebRequest https://dot.net/v1/dotnet-install.ps1 -OutFile dotnet-install.
 - **控制管理员权限的窗口无效？** Windows 的 UIPI 限制，请以管理员身份运行本程序。
 - **光标移动太快/太慢？** 调整「光标速度」或「响应曲线」；小幅移动难控制时增大死区。
 - **按组合键误触发了映射的按键？** 组合键与单键映射独立生效，请选择不常用按键作为组合键。
-
-## 项目结构
-
-```
-src/GamepadMouse/
-├── Program.cs          入口：单实例互斥、托盘启动（--settings 直接打开设置）
-├── TrayContext.cs      托盘图标与菜单（图标随映射状态变色）
-├── Mapper.cs           映射引擎：轮询手柄→鼠标（组合键、摇杆、按键边沿）
-├── XInput.cs           XInput 动态加载封装（1_4 / 1_3 / 9_1_0）
-├── MouseSimulator.cs   SendInput / SetCursorPos 封装
-├── MappingConfig.cs    配置模型与 JSON 持久化
-├── SettingsForm.cs     设置界面（深色现代风格，含组合键录制）
-├── AboutForm.cs        关于窗口（版本信息 / 项目主页 / 检查更新）
-├── UpdateChecker.cs    GitHub Releases 检查更新（releases/latest API）
-├── AppIcon.cs          图标加载与状态化处理（开启彩色 / 关闭灰阶）
-├── Autostart.cs        开机自启（HKCU 注册表）
-├── Log.cs              文件日志
-└── Ui/
-    ├── UiTheme.cs        深浅双主题配色 / 字体 / 圆角绘制
-    └── ModernControls.cs 自绘控件（卡片/按钮/开关/滑杆/分段/胶囊）
-assets/
-├── app-icon.svg        图标源文件（矢量）
-├── app-icon-256.png    渲染中间产物（Chrome headless）
-├── app.ico             多尺寸图标（16~256，嵌入 exe）
-└── icon-original.png   早期手绘风格参考图
-tools/IcoGen/           PNG → 多尺寸 .ico 编码工具
-scripts/build.ps1       构建脚本（含自包含发布）
-```
-
-### 图标再生成流程
-
-修改 `assets/app-icon.svg` 后：
-
-```powershell
-# 1. SVG → 256px 透明 PNG（Chrome headless 渲染）
-& "C:\Program Files\Google\Chrome\Application\chrome.exe" --headless=new --disable-gpu `
-    --default-background-color=00000000 --window-size=256,256 `
-    --screenshot="assets\app-icon-256.png" "file:///<仓库路径>/assets/app-icon.svg"
-# 2. PNG → 多尺寸 .ico
-dotnet run --project tools/IcoGen -- assets/app-icon-256.png assets/app.ico
-```
-
-> **提示**：手动更新已安装的版本时，必须使用 `dotnet publish` 的自包含单文件产物
-> （`scripts/update-installed.ps1` 一键完成）；`bin\Release` 下的开发构建只是启动器，
-> 单独复制到安装目录会因缺少 `GamepadMouse.dll`/`runtimeconfig.json` 无法启动。
 
 ## License
 
