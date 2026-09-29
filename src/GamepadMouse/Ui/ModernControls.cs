@@ -168,15 +168,17 @@ internal class ToggleSwitch : UiControl
     {
         var g = e.Graphics;
         g.SmoothingMode = SmoothingMode.AntiAlias;
-        float t = Checked ? _anim : 1f - _anim;
-        var track = UiTheme.Lerp(UiTheme.TrackOff, UiTheme.Accent, t);
+        // _anim 本身即滑块进度（1=开、0=关，向 Checked 收敛）；
+        // 此前按 Checked 再做一次反向（1-_anim），导致关态与开态渲染完全相同，
+        // 点击虽然生效（状态/配置已切换）但视觉毫无变化，如同“点击无效”。
+        var track = UiTheme.Lerp(UiTheme.TrackOff, UiTheme.Accent, _anim);
         var r = new Rectangle(0, 0, Width - 1, Height - 1);
         using (var p = UiTheme.Round(r, Height / 2))
         using (var b = new SolidBrush(track))
             g.FillPath(b, p);
 
         int thumbD = Height - 6;
-        int x = 3 + (int)((Width - thumbD - 6) * (Checked ? _anim : 1f - _anim));
+        int x = 3 + (int)((Width - thumbD - 6) * _anim);
         using (var b = new SolidBrush(Color.White))
             g.FillEllipse(b, x, 3, thumbD, thumbD);
         base.OnPaint(e);
