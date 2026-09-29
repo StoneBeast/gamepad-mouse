@@ -308,6 +308,9 @@ internal class SettingsForm : Form
         _grid.EnableHeadersVisualStyles = false;
         _grid.RowHeadersVisible = false;
         _grid.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
+        // 表头单元格默认边框用系统亮色绘制，深色主题下呈刺眼白线；改为无边框，
+        // 表头仅以 HeaderBg 色带与数据区区分
+        _grid.ColumnHeadersBorderStyle = DataGridViewHeaderBorderStyle.None;
         StyleGrid();
 
         var colB1 = ButtonColumn();
@@ -322,8 +325,12 @@ internal class SettingsForm : Form
         {
             if (e.RowIndex < 0 || e.Graphics is null || (e.ColumnIndex != 1 && e.ColumnIndex != 3)) return;
             e.PaintBackground(e.CellBounds, false);
-            using (var bg = new SolidBrush(e.State.HasFlag(DataGridViewElementStates.Selected)
-                ? UiTheme.RowSelect : UiTheme.CardBg))
+            // 背景须与所在行的斑马底色一致，否则奇数行两半深浅不一
+            bool alt = (e.RowIndex & 1) == 1;
+            Color fill = e.State.HasFlag(DataGridViewElementStates.Selected)
+                ? UiTheme.RowSelect
+                : alt ? UiTheme.RowAlt : UiTheme.CardBg;
+            using (var bg = new SolidBrush(fill))
                 e.Graphics.FillRectangle(bg, e.CellBounds);
             var textRect = new Rectangle(e.CellBounds.X + 8, e.CellBounds.Y,
                 e.CellBounds.Width - 28, e.CellBounds.Height);
