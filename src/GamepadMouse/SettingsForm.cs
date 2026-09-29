@@ -28,6 +28,8 @@ internal class SettingsForm : Form
     private Segmented _segTheme = null!;
     private Segmented _segWheelMode = null!;
     private readonly Label _padStatus = new();
+    private Label _savedHint = null!;
+    private System.Windows.Forms.Timer _savedHintTimer = null!;
     private Panel _header = null!;
     private Icon _headerIcon;
 
@@ -561,8 +563,23 @@ internal class SettingsForm : Form
         var btnCancel = new ModernButton("取消", new Point(446, 804), new Size(90, 34));
         btnCancel.Click += (_, _) => Close();
         var btnOk = new ModernButton("保存并应用", new Point(544, 804), new Size(104, 34), ModernButton.Style.Primary);
-        btnOk.Click += (_, _) => SaveAndClose();
-        Controls.AddRange([btnDefaults, btnCancel, btnOk]);
+        btnOk.Click += (_, _) => SaveAndApply();
+
+        // 保存后的短暂提示：窗口不关闭，让用户知道改动已生效
+        _savedHint = new Label
+        {
+            Text = "✓ 已保存并应用",
+            Location = new Point(170, 811),
+            Size = new Size(240, 22),
+            ForeColor = UiTheme.Success,
+            BackColor = Color.Transparent,
+            Font = UiTheme.FontSmall,
+            Visible = false,
+        };
+        _savedHintTimer = new System.Windows.Forms.Timer { Interval = 2000 };
+        _savedHintTimer.Tick += (_, _) => { _savedHint.Visible = false; _savedHintTimer.Stop(); };
+
+        Controls.AddRange([btnDefaults, btnCancel, btnOk, _savedHint]);
         KeyPreview = true;
         KeyDown += (_, e) => { if (e.KeyCode == Keys.Escape) Close(); };
 
@@ -722,7 +739,7 @@ internal class SettingsForm : Form
         }
     }
 
-    private void SaveAndClose()
+    private void SaveAndApply()
     {
         _working.MoveStick = _segMove.Selected == 0 ? "Left" : "Right";
         _working.ScrollStick = _segScroll.Selected switch { 0 => "Left", 1 => "Right", _ => "None" };
@@ -749,7 +766,9 @@ internal class SettingsForm : Form
         }
 
         Saved = true;
-        DialogResult = DialogResult.OK;
-        Close();
+        _savedHint.ForeColor = UiTheme.Success;
+        _savedHint.Visible = true;
+        _savedHintTimer.Stop();
+        _savedHintTimer.Start();
     }
 }
