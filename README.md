@@ -36,7 +36,7 @@ git tag v1.2.1 && git push origin v1.2.1
 ![深色主题](docs/settings-dark.png)
 
 ![浅色主题](docs/settings-light.png)
-- **后台常驻**：托盘图标运行，右键菜单可开关映射、开机自启、退出。
+- **后台常驻**：托盘图标运行，右键菜单可开关映射、开机自启、打开设置或「关于」窗口（可查询 GitHub Releases 检查更新）、退出。
 - **配置持久化**：JSON 配置文件存于程序所在目录（便携式，随目录迁移；目录不可写时自动回退 `%APPDATA%`），修改后即时生效。
 - **安全细节**：映射关闭/手柄断开/程序退出时自动释放按住的鼠标键，不会出现"卡键"。
 
@@ -133,6 +133,8 @@ src/GamepadMouse/
 ├── MouseSimulator.cs   SendInput / SetCursorPos 封装
 ├── MappingConfig.cs    配置模型与 JSON 持久化
 ├── SettingsForm.cs     设置界面（深色现代风格，含组合键录制）
+├── AboutForm.cs        关于窗口（版本信息 / 项目主页 / 检查更新）
+├── UpdateChecker.cs    GitHub Releases 检查更新（releases/latest API）
 ├── AppIcon.cs          图标加载与状态化处理（开启彩色 / 关闭灰阶）
 ├── Autostart.cs        开机自启（HKCU 注册表）
 ├── Log.cs              文件日志
