@@ -183,6 +183,13 @@ internal class UiControl : Control
                  | ControlStyles.ResizeRedraw, true);
         TabStop = false;
     }
+
+    /// <summary>当前 DPI 相对设计基准 96 的缩放系数。窗体按 Dpi 模式缩放控件边界，
+    /// 但自绘 OnPaint 里的固定像素（内边距、圆点、轨道厚度等）不随之缩放，须用 S() 换算。</summary>
+    protected float DpiScale => DeviceDpi / 96f;
+
+    /// <summary>把 96 DPI 设计基准下的像素值换算为当前 DPI 的像素值。</summary>
+    protected int S(int v) => (int)Math.Round(v * DeviceDpi / 96f);
 }
 
 /// <summary>自绘面板基类。</summary>
@@ -196,4 +203,10 @@ internal class UiPanel : Panel
                  | ControlStyles.ResizeRedraw, true);
         TabStop = false;
     }
+
+    /// <summary>当前 DPI 相对设计基准 96 的缩放系数（见 UiControl.DpiScale）。</summary>
+    protected float DpiScale => DeviceDpi / 96f;
+
+    /// <summary>把 96 DPI 设计基准下的像素值换算为当前 DPI 的像素值。</summary>
+    protected int S(int v) => (int)Math.Round(v * DeviceDpi / 96f);
 }

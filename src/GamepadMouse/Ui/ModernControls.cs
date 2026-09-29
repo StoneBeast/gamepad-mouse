@@ -22,7 +22,7 @@ internal class Card : UiPanel
         var g = e.Graphics;
         g.SmoothingMode = SmoothingMode.AntiAlias;
         var r = new Rectangle(0, 0, Width - 1, Height - 1);
-        using (var p = UiTheme.Round(r, 12))
+        using (var p = UiTheme.Round(r, S(12)))
         {
             using var bg = new SolidBrush(UiTheme.CardBg);
             g.FillPath(bg, p);
@@ -31,8 +31,8 @@ internal class Card : UiPanel
         }
         // 标题左侧主题色小竖条
         using (var bar = new SolidBrush(UiTheme.Accent))
-            g.FillRectangle(bar, 20, 15, 3, 13);
-        TextRenderer.DrawText(g, Title, UiTheme.FontUiBold, new Point(30, 12), UiTheme.TextSecondary);
+            g.FillRectangle(bar, S(20), S(15), S(3), S(13));
+        TextRenderer.DrawText(g, Title, UiTheme.FontUiBold, new Point(S(30), S(12)), UiTheme.TextSecondary);
         base.OnPaint(e);
     }
 }
@@ -74,7 +74,7 @@ internal class ModernButton : UiControl
         Color textColor = primary ? Color.White : enabled ? UiTheme.TextPrimary : UiTheme.TextSecondary;
 
         var r = new Rectangle(0, 0, Width - 1, Height - 1);
-        using (var p = UiTheme.Round(r, 8))
+        using (var p = UiTheme.Round(r, S(8)))
         {
             using var bg = new SolidBrush(fill);
             g.FillPath(bg, p);
@@ -177,10 +177,10 @@ internal class ToggleSwitch : UiControl
         using (var b = new SolidBrush(track))
             g.FillPath(b, p);
 
-        int thumbD = Height - 6;
-        int x = 3 + (int)((Width - thumbD - 6) * _anim);
+        int thumbD = Height - S(6);
+        int x = S(3) + (int)((Width - thumbD - S(6)) * _anim);
         using (var b = new SolidBrush(Color.White))
-            g.FillEllipse(b, x, 3, thumbD, thumbD);
+            g.FillEllipse(b, x, S(3), thumbD, thumbD);
         base.OnPaint(e);
     }
 
@@ -203,8 +203,8 @@ internal class ModernSlider : UiControl
     private bool _drag;
     public event EventHandler? ValueChanged;
 
-    private int TrackLeft => 10;
-    private int TrackRight => Width - 66;
+    private int TrackLeft => S(10);
+    private int TrackRight => Width - S(66);
     private int TrackY => Height / 2;
 
     public double Value
@@ -264,27 +264,27 @@ internal class ModernSlider : UiControl
         int pos = ValueToPos();
 
         // 轨道
-        var trackRect = new Rectangle(TrackLeft, TrackY - 2, TrackRight - TrackLeft, 5);
-        using (var p = UiTheme.Round(trackRect, 2))
+        var trackRect = new Rectangle(TrackLeft, TrackY - S(2), TrackRight - TrackLeft, S(5));
+        using (var p = UiTheme.Round(trackRect, S(2)))
         {
             using var bg = new SolidBrush(UiTheme.SliderTrack);
             g.FillPath(bg, p);
-            var fillRect = new Rectangle(TrackLeft, TrackY - 2, Math.Max(4, pos - TrackLeft), 5);
-            using var p2 = UiTheme.Round(fillRect, 2);
+            var fillRect = new Rectangle(TrackLeft, TrackY - S(2), Math.Max(S(4), pos - TrackLeft), S(5));
+            using var p2 = UiTheme.Round(fillRect, S(2));
             using var fill = new SolidBrush(UiTheme.Accent);
             g.FillPath(fill, p2);
         }
 
         // 滑块
-        int d = _drag ? 16 : 14;
+        int d = _drag ? S(16) : S(14);
         using (var b = new SolidBrush(Color.White))
             g.FillEllipse(b, pos - d / 2, TrackY - d / 2, d, d);
-        using (var pen = new Pen(UiTheme.Accent, 2f))
+        using (var pen = new Pen(UiTheme.Accent, S(2)))
             g.DrawEllipse(pen, pos - d / 2, TrackY - d / 2, d, d);
 
         // 数值
         var text = Format(_value);
-        var rect = new Rectangle(TrackRight + 6, 0, 58, Height);
+        var rect = new Rectangle(TrackRight + S(6), 0, S(58), Height);
         TextRenderer.DrawText(g, text, Font, rect, UiTheme.TextPrimary,
             TextFormatFlags.VerticalCenter | TextFormatFlags.HorizontalCenter | TextFormatFlags.SingleLine);
         base.OnPaint(e);
@@ -334,7 +334,7 @@ internal class Segmented : UiControl
         var g = e.Graphics;
         g.SmoothingMode = SmoothingMode.AntiAlias;
         var r = new Rectangle(0, 0, Width - 1, Height - 1);
-        using (var p = UiTheme.Round(r, 8))
+        using (var p = UiTheme.Round(r, S(8)))
         {
             using var bg = new SolidBrush(UiTheme.WindowBg);
             g.FillPath(bg, p);
@@ -345,11 +345,11 @@ internal class Segmented : UiControl
         int w = Width / Items.Length;
         for (int i = 0; i < Items.Length; i++)
         {
-            var seg = new Rectangle(i * w, 2, w - (i == Items.Length - 1 ? 2 : 0), Height - 4);
+            var seg = new Rectangle(i * w, S(2), w - (i == Items.Length - 1 ? S(2) : 0), Height - S(4));
             bool sel = i == Selected;
             if (sel)
             {
-                using var p = UiTheme.Round(new Rectangle(seg.X + 2, seg.Y, seg.Width - 4, seg.Height), 6);
+                using var p = UiTheme.Round(new Rectangle(seg.X + S(2), seg.Y, seg.Width - S(4), seg.Height), S(6));
                 using var b = new SolidBrush(UiTheme.Accent);
                 g.FillPath(b, p);
             }
@@ -379,7 +379,7 @@ internal class StatusPill : UiControl
     {
         _text = text;
         _ok = ok;
-        Width = TextRenderer.MeasureText(_text, UiTheme.FontSmall).Width + 46;
+        Width = TextRenderer.MeasureText(_text, UiTheme.FontSmall).Width + S(46);
         Invalidate();
     }
 
@@ -397,9 +397,9 @@ internal class StatusPill : UiControl
             g.DrawPath(border, p);
         }
         using (var b = new SolidBrush(main))
-            g.FillEllipse(b, 12, Height / 2 - 4, 8, 8);
+            g.FillEllipse(b, S(12), Height / 2 - S(4), S(8), S(8));
         TextRenderer.DrawText(g, _text, UiTheme.FontSmall,
-            new Rectangle(26, 0, Width - 30, Height), main,
+            new Rectangle(S(26), 0, Width - S(30), Height), main,
             TextFormatFlags.VerticalCenter | TextFormatFlags.SingleLine);
         base.OnPaint(e);
     }
@@ -419,7 +419,7 @@ internal class Chip : UiControl
 
     private void UpdateWidth()
     {
-        Width = TextRenderer.MeasureText(Text, Font).Width + 22;
+        Width = TextRenderer.MeasureText(Text, Font).Width + S(22);
     }
 
     public void SetText(string text) { Text = text; UpdateWidth(); Invalidate(); }

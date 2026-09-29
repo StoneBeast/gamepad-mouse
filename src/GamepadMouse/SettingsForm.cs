@@ -47,7 +47,11 @@ internal class SettingsForm : Form
 
         Text = "GamepadMouse 设置";
         Font = UiTheme.FontUi;
-        AutoScaleMode = AutoScaleMode.Dpi;
+        // 布局按 96 DPI 设计。AutoScaleMode.Dpi/Font 在代码构建（非设计器）场景下，
+        // WinForms 会在布局时把基准尺寸悄悄改写为当前 DPI 而不执行缩放，导致高 DPI 下
+        // 窗体保持 96 布局、字体却按实际 DPI 渲染而裁剪；故关闭自动缩放，
+        // 改为在 OnHandleCreated 里按 DeviceDpi/96 显式 Scale 一次（见 ScaleForDpi）。
+        AutoScaleMode = AutoScaleMode.None;
         FormBorderStyle = FormBorderStyle.FixedDialog;
         MaximizeBox = false;
         MinimizeBox = false;
@@ -95,6 +99,25 @@ internal class SettingsForm : Form
             _grid.ClearSelection();
             _grid.CurrentCell = null;
         };
+    }
+
+    private bool _dpiScaled;
+
+    /// <summary>
+    /// 句柄创建后按实际 DPI 一次性缩放窗体与全部子控件（96 DPI 设计 → 当前 DPI）。
+    /// 依赖 MeasureText 的动态宽度（状态胶囊、组合键圆片）在缩放前已按真实 DPI 计入，
+    /// 会被 Scale 再乘一次，需重建；随后重新居中。
+    /// </summary>
+    protected override void OnHandleCreated(EventArgs e)
+    {
+        base.OnHandleCreated(e);
+        float f = DeviceDpi / 96f;
+        if (_dpiScaled || Math.Abs(f - 1f) < 0.01f) return;
+        _dpiScaled = true;
+        Scale(new SizeF(f, f));
+        _pill.Set(_mapper.Enabled ? "映射已开启" : "映射已关闭", _mapper.Enabled);
+        RebuildChips();
+        CenterToScreen();
     }
 
     /// <summary>统一创建标签并登记主题着色。</summary>
@@ -147,14 +170,15 @@ internal class SettingsForm : Form
             SwitchTheme(_segTheme.Selected == 0 ? Palette.Dark : Palette.Light);
 
         p.Controls.AddRange([_pill, _swMapping, _segTheme]);
+        int s(int v) => (int)Math.Round(v * p.DeviceDpi / 96f);
         p.Paint += (_, e) =>
         {
             var g = e.Graphics;
             g.SmoothingMode = SmoothingMode.AntiAlias;
-            g.DrawIcon(_headerIcon, new Rectangle(16, 13, 34, 34));
-            TextRenderer.DrawText(g, "GamepadMouse", UiTheme.FontTitle, new Point(62, 10), UiTheme.TextPrimary);
+            g.DrawIcon(_headerIcon, new Rectangle(s(16), s(13), s(34), s(34)));
+            TextRenderer.DrawText(g, "GamepadMouse", UiTheme.FontTitle, new Point(s(62), s(10)), UiTheme.TextPrimary);
             TextRenderer.DrawText(g, _padStatus.Text.Length == 0 ? "手柄映射鼠标 v1.3" : _padStatus.Text,
-                UiTheme.FontTitleSub, new Point(64, 36), UiTheme.TextSecondary);
+                UiTheme.FontTitleSub, new Point(s(64), s(36)), UiTheme.TextSecondary);
         };
         return p;
     }
@@ -402,23 +426,24 @@ internal class SettingsForm : Form
     /// <summary>表格深浅主题样式（构建时与主题切换时调用）。</summary>
     private void StyleGrid()
     {
+        int s(int v) => (int)Math.Round(v * _grid.DeviceDpi / 96f);
         _grid.BackgroundColor = UiTheme.CardBg;
         _grid.CellBorderStyle = DataGridViewCellBorderStyle.SingleHorizontal;
         _grid.GridColor = UiTheme.GridLine;
-        _grid.ColumnHeadersHeight = 28;
-        _grid.RowTemplate.Height = 26;
+        _grid.ColumnHeadersHeight = s(28);
+        _grid.RowTemplate.Height = s(26);
 
         _grid.ColumnHeadersDefaultCellStyle.BackColor = UiTheme.HeaderBg;
         _grid.ColumnHeadersDefaultCellStyle.ForeColor = UiTheme.TextSecondary;
         _grid.ColumnHeadersDefaultCellStyle.Font = UiTheme.FontSmall;
         _grid.ColumnHeadersDefaultCellStyle.SelectionBackColor = UiTheme.HeaderBg;
-        _grid.ColumnHeadersDefaultCellStyle.Padding = new Padding(6, 0, 0, 0);
+        _grid.ColumnHeadersDefaultCellStyle.Padding = new Padding(s(6), 0, 0, 0);
 
         _grid.DefaultCellStyle.BackColor = UiTheme.CardBg;
         _grid.DefaultCellStyle.ForeColor = UiTheme.TextPrimary;
         _grid.DefaultCellStyle.SelectionBackColor = UiTheme.RowSelect;
         _grid.DefaultCellStyle.SelectionForeColor = UiTheme.TextPrimary;
-        _grid.DefaultCellStyle.Padding = new Padding(8, 0, 0, 0);
+        _grid.DefaultCellStyle.Padding = new Padding(s(8), 0, 0, 0);
         _grid.DefaultCellStyle.WrapMode = DataGridViewTriState.False;
 
         _grid.AlternatingRowsDefaultCellStyle.BackColor = UiTheme.RowAlt;
@@ -621,27 +646,31 @@ internal class SettingsForm : Form
         {
             Text = "录制组合键",
             FormBorderStyle = FormBorderStyle.FixedDialog,
-            ClientSize = new Size(420, 190),
             StartPosition = FormStartPosition.CenterParent,
             MaximizeBox = false,
             MinimizeBox = false,
             Font = UiTheme.FontUi,
+            AutoScaleMode = AutoScaleMode.None,
             BackColor = UiTheme.WindowBg,
         };
+        // 对话框几何直接按当前 DPI 构造（SettingsForm 自身已按 96 基线缩放，
+        // 其 DeviceDpi 即真实 DPI；主窗体的 ScaleForDpi 只作用于主窗体子树）
+        int s(int v) => (int)Math.Round(v * DeviceDpi / 96f);
+        dlg.ClientSize = new Size(s(420), s(190));
 
-        var card = new Card("录制组合键", new Point(12, 12), new Size(396, 120));
+        var card = new Card("录制组合键", new Point(s(12), s(12)), new Size(s(396), s(120)));
         var hint = new Label
         {
             Text = "请同时按住想使用的按键，然后点击「使用当前按键」。",
-            Location = new Point(24, 42),
-            Size = new Size(350, 20),
+            Location = new Point(s(24), s(42)),
+            Size = new Size(s(350), s(20)),
             ForeColor = UiTheme.TextSecondary,
             Font = UiTheme.FontSmall,
         };
         var live = new FlowLayoutPanel
         {
-            Location = new Point(24, 68),
-            Size = new Size(350, 40),
+            Location = new Point(s(24), s(68)),
+            Size = new Size(s(350), s(40)),
             BackColor = UiTheme.CardBg,
         };
 
@@ -676,8 +705,8 @@ internal class SettingsForm : Form
         };
         t.Start();
 
-        var btnOk = new ModernButton("使用当前按键", new Point(186, 142), new Size(120, 34), ModernButton.Style.Primary);
-        var btnCancel = new ModernButton("取消", new Point(314, 142), new Size(80, 34));
+        var btnOk = new ModernButton("使用当前按键", new Point(s(186), s(142)), new Size(s(120), s(34)), ModernButton.Style.Primary);
+        var btnCancel = new ModernButton("取消", new Point(s(314), s(142)), new Size(s(80), s(34)));
         btnOk.Click += (_, _) => { dlg.Tag = true; dlg.Close(); };
         btnCancel.Click += (_, _) => { dlg.Tag = false; dlg.Close(); };
 
