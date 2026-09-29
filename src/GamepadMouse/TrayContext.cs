@@ -21,20 +21,27 @@ internal class TrayContext : ApplicationContext
         })
         { CheckOnClick = true, Checked = mapper.Enabled };
 
+        // 不用 CheckOnClick：它会在 Click 事件前自动翻转 Checked，处理器里再取反
+        // 等于双重取反，SetEnabled 永远收到旧状态，开关形同虚设。
+        // 勾选状态统一以注册表为准，点击时取“显示状态的反面”，结束后回读校正。
         _menuAutostart = new ToolStripMenuItem("开机自动启动", null, (_, _) =>
         {
+            bool want = !_menuAutostart.Checked;
             try
             {
-                Autostart.SetEnabled(!_menuAutostart.Checked);
-                _menuAutostart.Checked = Autostart.IsEnabled();
+                Autostart.SetEnabled(want);
             }
             catch (Exception ex)
             {
                 MessageBox.Show("设置开机自启失败：" + ex.Message, "错误",
                     MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
+            finally
+            {
+                _menuAutostart.Checked = Autostart.IsEnabled();
+            }
         })
-        { CheckOnClick = true, Checked = Autostart.IsEnabled() };
+        { Checked = Autostart.IsEnabled() };
 
         var menu = new ContextMenuStrip();
         menu.Items.Add(_menuToggle);
@@ -43,6 +50,8 @@ internal class TrayContext : ApplicationContext
         menu.Items.Add(_menuAutostart);
         menu.Items.Add(new ToolStripSeparator());
         menu.Items.Add("退出", null, (_, _) => ExitApp());
+        // 设置窗口等其它途径也可能改过自启，弹出时以注册表为准刷新勾选
+        menu.Opening += (_, _) => _menuAutostart.Checked = Autostart.IsEnabled();
 
         _tray = new NotifyIcon
         {
