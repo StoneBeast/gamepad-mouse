@@ -588,7 +588,13 @@ internal class SettingsForm : Form
 
     private void BuildFooter()
     {
-        var btnDefaults = new ModernButton("恢复默认", new Point(16, 804), new Size(96, 34));
+        var btnAbout = new ModernButton("关于", new Point(16, 804), new Size(64, 34));
+        btnAbout.Click += (_, _) =>
+        {
+            var about = new AboutForm { StartPosition = FormStartPosition.CenterParent };
+            about.Show(this);
+        };
+        var btnDefaults = new ModernButton("恢复默认", new Point(88, 804), new Size(96, 34));
         btnDefaults.Click += (_, _) => ResetDefaults();
         var btnCancel = new ModernButton("取消", new Point(446, 804), new Size(90, 34));
         btnCancel.Click += (_, _) => Close();
@@ -599,7 +605,7 @@ internal class SettingsForm : Form
         _savedHint = new Label
         {
             Text = "✓ 已保存并应用",
-            Location = new Point(170, 811),
+            Location = new Point(196, 811),
             Size = new Size(240, 22),
             ForeColor = UiTheme.Success,
             BackColor = Color.Transparent,
@@ -609,7 +615,7 @@ internal class SettingsForm : Form
         _savedHintTimer = new System.Windows.Forms.Timer { Interval = 2000 };
         _savedHintTimer.Tick += (_, _) => { _savedHint.Visible = false; _savedHintTimer.Stop(); };
 
-        Controls.AddRange([btnDefaults, btnCancel, btnOk, _savedHint]);
+        Controls.AddRange([btnAbout, btnDefaults, btnCancel, btnOk, _savedHint]);
         KeyPreview = true;
         KeyDown += (_, e) => { if (e.KeyCode == Keys.Escape) Close(); };
 

@@ -10,6 +10,7 @@ internal class TrayContext : ApplicationContext
     private readonly ToolStripMenuItem _menuToggle = null!;
     private readonly ToolStripMenuItem _menuAutostart = null!;
     private SettingsForm? _settings;
+    private AboutForm? _about;
 
     public TrayContext(Mapper mapper, bool openSettingsOnStart = false)
     {
@@ -48,6 +49,7 @@ internal class TrayContext : ApplicationContext
         menu.Items.Add(new ToolStripSeparator());
         menu.Items.Add("设置…", null, (_, _) => ShowSettings());
         menu.Items.Add(_menuAutostart);
+        menu.Items.Add("关于…", null, (_, _) => ShowAbout());
         menu.Items.Add(new ToolStripSeparator());
         menu.Items.Add("退出", null, (_, _) => ExitApp());
         // 设置窗口等其它途径也可能改过自启，弹出时以注册表为准刷新勾选
@@ -116,6 +118,22 @@ internal class TrayContext : ApplicationContext
         _settings.TopMost = true;
         _settings.Activate();
         _settings.TopMost = false;
+    }
+
+    private void ShowAbout()
+    {
+        if (_about != null && !_about.IsDisposed)
+        {
+            _about.TopMost = true;
+            _about.Activate();
+            _about.TopMost = false;
+            return;
+        }
+        _about = new AboutForm();
+        _about.Show();
+        _about.TopMost = true;
+        _about.Activate();
+        _about.TopMost = false;
     }
 
     private void ExitApp()
